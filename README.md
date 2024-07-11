@@ -39,7 +39,7 @@ Download and install DPDK:
 
     
     sudo apt update
-    sudo apt install -y dpdk dpdk-dev libdpdk-dev build-essential
+    sudo apt install -y dpdk dpdk-dev libdpdk-dev 
     
 
 Set up the environment variables for DPDK:
