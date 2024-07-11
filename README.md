@@ -90,8 +90,8 @@ Clone the project repository:
 Create a build directory and run CMake:
 
     
-    mkdir build
-    cd build
+    mkdir cmake-build-debug
+    cd cmake-build-debug
     cmake ..
     make
     
