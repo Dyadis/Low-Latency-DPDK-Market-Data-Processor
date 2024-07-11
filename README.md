@@ -38,7 +38,6 @@ Update your package list and install the necessary packages:
 Download and install DPDK:
 
     
-    sudo apt update
     sudo apt install -y dpdk dpdk-dev libdpdk-dev 
     
 
