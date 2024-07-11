@@ -1,0 +1,3 @@
+/home/adel/Downloads/Low-latency-DPDK/cmake-build-debug/CMakeFiles/Low_latency_DPDK.dir
+/home/adel/Downloads/Low-latency-DPDK/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/adel/Downloads/Low-latency-DPDK/cmake-build-debug/CMakeFiles/rebuild_cache.dir
