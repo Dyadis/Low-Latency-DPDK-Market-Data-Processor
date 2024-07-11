@@ -1,4 +1,0 @@
-Cannot generate into C:\Users\Adel\Downloads\Low-latency-DPDK-20240711T105604Z-001\Low-latency-DPDK\cmake-build-debug
-It is already used for project \\wsl.localhost\Ubuntu\home\adel\Downloads\Low-latency-DPDK
-
-Please either delete it manually or select another generation directory
