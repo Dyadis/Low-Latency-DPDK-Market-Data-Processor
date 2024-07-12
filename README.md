@@ -58,9 +58,19 @@ Configure the system to use hugepages:
     sudo mkdir -p /mnt/huge
     sudo mount -t hugetlbfs nodev /mnt/huge
     echo "nodev /mnt/huge hugetlbfs defaults 0 0" | sudo tee -a /etc/fstab
+
+
+### Step 4: Clone the Repository
+
+Clone the project repository:
+
+    
+    git clone https://github.com/adelshaaban/low-latency-market-data-processor.git
+    cd low-latency-market-data-processor
+    
     
 
-### Step 4: Configure Network Interface for DPDK
+### Step 5: Configure Network Interface for DPDK
 
 List your network interfaces and find the PCI address of the network interface you want to use with DPDK:
 
@@ -76,14 +86,6 @@ Bind the network interface to the DPDK-compatible driver (e.g., uio_pci_generic)
     sudo dpdk-devbind.py --bind=uio_pci_generic <PCI_ADDRESS>
     
 
-### Step 5: Clone the Repository
-
-Clone the project repository:
-
-    
-    git clone https://github.com/adelshaaban/low-latency-market-data-processor.git
-    cd low-latency-market-data-processor
-    
 
 ### Step 6: Build the Project
 
