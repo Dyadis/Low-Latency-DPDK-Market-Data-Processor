@@ -120,6 +120,31 @@ To enable AVX2 SIMD for performance optimization, ensure your CPU supports AVX2 
 
 ## Troubleshooting
 
+
+### Error: Interface is Active. Not Modifying
+
+If the interface is active or cannot be modified:
+
+List all network interfaces to find the interface name:
+
+    ip link show
+
+Check the interface status:
+
+    ip link show <INTERFACE_NAME>
+
+Bring down the interface:
+
+    sudo ip link set <INTERFACE_NAME> down
+
+Unbind the interface from the current driver:
+
+    sudo dpdk-devbind.py --unbind <PCI_ADDRESS>
+
+Bind the interface to the DPDK-compatible driver:
+
+    sudo dpdk-devbind.py --bind=uio_pci_generic <PCI_ADDRESS>
+
 ### Error: Cannot Get Hugepage Information
 
 If you see the error `Cannot get hugepage information`, ensure that hugepages are configured correctly and are available:
