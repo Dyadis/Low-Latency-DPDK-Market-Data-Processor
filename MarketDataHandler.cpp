@@ -43,18 +43,7 @@ void MarketDataHandler::processMessages() {
     while (!force_quit && message_queue.pop(msg)) {
         auto start = std::chrono::high_resolution_clock::now();
 
-        // only used for manually testing
-        switch (msg.message_type) {
-            case 'A': // Add order
-                order_book.addOrder(msg.order_id, msg.price, msg.quantity, msg.symbol[0] == 'B');
-                break;
-            case 'X': // Cancel order
-                order_book.removeOrder(msg.order_id);
-                break;
-            case 'M': // Modify order
-                order_book.modifyOrder(msg.order_id, msg.quantity);
-                break;
-        }
+        order_book.addOrder(msg.order_id, msg.price, msg.quantity, msg.symbol[0] == 'B');
 
         auto end = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
@@ -64,9 +53,6 @@ void MarketDataHandler::processMessages() {
          * We don't need any ordering guarantees here so it speeds perf/makes everything easier to debug
          */
         processed_messages.fetch_add(1, std::memory_order_relaxed);
-    }
-    if (!force_quit) {
-        executeTradingStrategy();
     }
 }
 
@@ -133,13 +119,18 @@ void MarketDataHandler::process_network_packet(const uint8_t* data, size_t len) 
         if (order_data.empty()) break;
 
         Order order = OrderProtocol::deserialize_order(order_data.data(), order_data.size());
-        order_book.addOrder(order.order_id, order.price, order.quantity, order.is_buy);
+        MarketDataMessage msg;
+        msg.order_id = order.order_id;
+        msg.price = order.price;
+        msg.quantity = order.quantity;
+        msg.symbol[0] = order.is_buy ? 'B' : 'S';
+        msg.timestamp = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+
+        handleMessage(msg);
     }
 }
 
-/* Simulate network delay
- * This adds a realistic delay to network operations
- */
+// Simulate semi-realistic network delay (number is random i'm not sure what its like in actual prod but i'd imagine its not this large)
 void MarketDataHandler::simulate_network_delay() {
     rte_delay_us(50);  // 50 μs network delay
 }
@@ -156,8 +147,7 @@ void MarketDataHandler::submit_order(const Order& order) {
 
     simulate_network_delay();
 
-    // Simulate sending the packet
-    tcp_stack.process_packet(packet.data(), packet.size());
+    process_network_packet(packet.data(), packet.size());
 
     std::cout << "Order submitted: ID " << order.order_id << ", Price " << order.price
               << ", Quantity " << order.quantity << ", Is Buy " << order.is_buy << std::endl;
@@ -186,28 +176,21 @@ void MarketDataHandler::simulate_market_activity(int num_orders) {
     for (int i = 0; i < num_orders; ++i) {
         Order order = generate_random_order();
 
-        auto order_start_time = std::chrono::high_resolution_clock::now();
+        std::vector<uint8_t> order_data = OrderProtocol::serialize_order(order);
+        std::vector<uint8_t> packet = tcp_stack.create_packet(0x0A000001, 12345, order_data.data(), order_data.size());
 
-        // Process the order
-        order_book.addOrder(order.order_id, order.price, order.quantity, order.is_buy);
+        process_network_packet(packet.data(), packet.size());
 
-        // Simulate order submission
-        submit_order(order);
-
-        auto order_end_time = std::chrono::high_resolution_clock::now();
-        auto order_duration = std::chrono::duration_cast<std::chrono::microseconds>(order_end_time - order_start_time);
-
-        std::cout << "Order " << order.order_id << " processed in " << order_duration.count() << " microseconds" << std::endl;
+        //delay to avoid overwhelming system
+        //std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
 
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
 
-    std::cout << "Processed " << num_orders << " orders in " << duration.count() << " milliseconds" << std::endl;
+    std::cout << "Simulated " << num_orders << " orders in " << duration.count() << " milliseconds" << std::endl;
     std::cout << "Average latency: " << (duration.count() * 1000.0 / num_orders) << " microseconds per order" << std::endl;
 
-    // Print final order book state
-    printStats();
 }
 
 /* RX core function
@@ -223,12 +206,6 @@ int lcore_rx(void *arg) {
         for (uint16_t i = 0; i < nb_rx; i++) {
             char* data = rte_pktmbuf_mtod(bufs[i], char*);
             uint16_t data_len = rte_pktmbuf_data_len(bufs[i]);
-            uint64_t timestamp = rte_rdtsc();  // Precise timestamp
-
-            // Process as market data
-            MarketDataMessage msg = SIMDMessageParser::parse(data);
-            msg.timestamp = timestamp;
-            handler->handleMessage(msg);
 
             // Process as network packet (for order submission)
             handler->process_network_packet(reinterpret_cast<uint8_t*>(data), data_len);
