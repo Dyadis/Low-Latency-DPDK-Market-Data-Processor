@@ -51,9 +51,18 @@ int main(int argc, char *argv[]) {
     }
     std::cout << "Worker core launched." << std::endl;
 
-    // Simulate market activity
-    handler.simulate_market_activity(10000);  // Simulate 10,000 orders
+    // Some time for the cores to initialize
+    std::this_thread::sleep_for(std::chrono::seconds(1));
 
+    // Simulate market activity
+    handler.simulate_market_activity(10000);  // 10,000 orders
+
+    // Allow processing to complete first
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+
+    handler.printStats();
+
+    force_quit = true;
     /* Wait for all cores to complete
      * This ensures orderly shutdown
      */
