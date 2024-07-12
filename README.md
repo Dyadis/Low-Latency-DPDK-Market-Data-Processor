@@ -189,7 +189,5 @@ Check DPDK EAL logs for more detailed error messages. Running the application wi
 
 Verify that no other applications are using the network interface you are trying to bind to DPDK.
 
-## Notes
-
-- Ensure that no other application is using the network interface you bind to DPDK.
+## Note
 - You may need to adjust the configuration parameters in the source code to match your environment and requirements.
